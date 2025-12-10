@@ -151,15 +151,34 @@ jobs:
           fi
         shell: bash
 
-      - name: Generate application icon
+      - name: Check application icon
         if: startsWith(github.ref, 'refs/tags/') && matrix.enable_gui == true
         run: |
-          # 检查是否有 PyQt5（Linux 软路由版本可能没有）
-          if python3 -c "import PyQt5.QtWidgets" 2>/dev/null; then
-            python3 generate_icon.py
-            ls -lh app_icon.* 2>/dev/null || echo "Icon generation completed"
+          # 检查图标文件是否存在（图标文件已包含在仓库中）
+          echo "Checking for icon files..."
+          ls -lh app_icon.* 2>/dev/null || echo "No icon files found"
+          if [ "${{ matrix.goos }}" == "windows" ]; then
+            if [ -f "app_icon.ico" ]; then
+              echo "✓ Found app_icon.ico"
+            elif [ -f "app_icon.png" ]; then
+              echo "✓ Found app_icon.png (will be used as icon)"
+            else
+              echo "⚠ No icon file found, PyInstaller will use default icon"
+            fi
+          elif [ "${{ matrix.goos }}" == "darwin" ]; then
+            if [ -f "app_icon.icns" ]; then
+              echo "✓ Found app_icon.icns"
+            elif [ -f "app_icon.png" ]; then
+              echo "✓ Found app_icon.png (will be used as icon)"
+            else
+              echo "⚠ No icon file found, PyInstaller will use default icon"
+            fi
           else
-            echo "PyQt5 not available, skipping icon generation (no GUI environment)"
+            if [ -f "app_icon.png" ]; then
+              echo "✓ Found app_icon.png"
+            else
+              echo "⚠ No icon file found, PyInstaller will use default icon"
+            fi
           fi
         shell: bash
 
